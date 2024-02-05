@@ -4,15 +4,27 @@ import puppeteer from 'puppeteer';
 @Injectable()
 export class PeopleService {
   private page: any;
-  async findByName(username: string): Promise<any> {
+  async findByName(username: string) {
     const usernameArray = username.split(' ');
-    this.page.goto(
-      `https://www.linkedin.com/search/results/people/?keywords=${usernameArray[0]}%20${usernameArray[1]}`,
-    );
-    await this.page.evaluate(() => {
-      document.querySelectorAll('.entity-result__title-text');
+    const formattedKeywords =
+      usernameArray.length > 1 ? usernameArray.join('%20') : usernameArray[0];
+
+    const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${formattedKeywords}`;
+
+    await this.page.goto(searchUrl);
+    await this.page.waitForNavigation();
+    const results = await this.page.evaluate(() => {
+      const values = [];
+      document
+        .querySelectorAll(
+          '.entity-result__title-text > a > span > span:first-child',
+        )
+        .forEach((item) => {
+          values.push(item.textContent);
+        });
+      return values;
     });
-    return 'test';
+    return results;
   }
   async login(username: string, password: string): Promise<any> {
     const browser = await puppeteer.launch({

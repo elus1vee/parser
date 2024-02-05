@@ -7,7 +7,7 @@ export class PeopleController {
 
   @Get(':name')
   async findByName(@Param() params: any): Promise<any> {
-    await this.peopleService.login('username', 'password');
-    return this.peopleService.findByName(params.name);
+    await this.peopleService.login('login', 'password');
+    return this.peopleService.findByName('aliaksandr');
   }
 }

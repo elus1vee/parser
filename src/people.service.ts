@@ -15,21 +15,27 @@ export class PeopleService {
     await this.page.waitForNavigation();
     const results = await this.page.evaluate(() => {
       const usersArray = [];
-
-      const usernames = document.querySelectorAll('.entity-result__title-text > a > span > span:first-child');
-      const imgLinks = document.querySelectorAll('.entity-result__universal-image > div > a > div > div > div > img');
-      const linkedinLinks = document.querySelectorAll('.reusable-search__result-container > div');
+      const usernames = document.querySelectorAll(
+        '.entity-result__title-text > a > span > span:first-child',
+      );
+      const imgLinks = document.querySelectorAll(
+        '.entity-result__universal-image > div > a > div > div > div > img',
+      );
+      const linkedinLinks = document.querySelectorAll(
+        '.reusable-search__result-container > div',
+      );
 
       usernames.forEach((username, index) => {
         const user = {
           username: username.textContent,
           imgLink: imgLinks[index].getAttribute('src'),
-          linkedinLink: linkedinLinks[index].getAttribute("data-chameleon-result-urn")
+          linkedinLink: linkedinLinks[index].getAttribute(
+            'data-chameleon-result-urn',
+          ),
         };
         usersArray.push(user);
       });
-
-    })
+    });
     return results;
   }
   async login(username: string, password: string): Promise<any> {
@@ -46,4 +52,3 @@ export class PeopleService {
     await this.page.waitForNavigation();
   }
 }
-

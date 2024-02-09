@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import puppeteer from 'puppeteer';
+import puppeteer, { Page } from 'puppeteer';
 
 @Injectable()
-export class PeopleService {
-  private page: any;
-  async findByName(username: string) {
+export class SearchSevice {
+  private page: Page;
+  async findPeople(username: string) {
     const usernameArray = username.split('-');
     const formattedKeywords =
       usernameArray.length > 1 ? usernameArray.join('%20') : usernameArray[0];
@@ -12,27 +12,28 @@ export class PeopleService {
     const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${formattedKeywords}`;
 
     await this.page.goto(searchUrl);
-    // await this.page.waitForNavigation();
+    await this.page.waitForSelector(
+      '.entity-result__title-text>a>span>span:first-child',
+      { timeout: 5000 },
+    );
 
     const results = await this.page.evaluate(() => {
       const usersArray = [];
       const usersNames = document.querySelectorAll(
         '.entity-result__title-text>a>span>span:first-child',
       );
-
       const imgLinks = document.querySelectorAll(
         '.entity-result__universal-image > div > a > div > div > div',
       );
       const linkedinLinks = document.querySelectorAll(
         '.entity-result__title-text>a',
       );
-      console.log(imgLinks);
-      console.log(linkedinLinks);
 
       usersNames.forEach((username, index) => {
         const user = {
           username: username.textContent,
-          imgLink: imgLinks[index]?.children[0].getAttribute('src') || undefined,
+          imgLink:
+            imgLinks[index]?.children[0].getAttribute('src') || undefined,
           linkedinLink: linkedinLinks[index].getAttribute('href'),
         };
         usersArray.push(user);
@@ -62,19 +63,23 @@ export class PeopleService {
     const searchUrl = `https://www.linkedin.com/search/results/groups/?keywords=${formattedKeywords}`;
 
     await this.page.goto(searchUrl);
-    await this.page.waitForNavigation();
+    await this.page.waitForSelector('.entity-result__title-text > a', {
+      timeout: 5000,
+    });
     const results = await this.page.evaluate(() => {
       const groupArray = [];
-      console.log('HELLO');
       const groupNames = document.querySelectorAll(
-        '.entity-result__title-text > a',
+        '.entity-result__title-text>a',
       );
-      const imgLinks = document.querySelectorAll('#ember3880');
+      const imgLinks = document.querySelectorAll(
+        '.entity-result__universal-image>div>a>div>div',
+      );
 
       groupNames.forEach((name, index) => {
         const group = {
-          groupName: name.textContent,
-          imgLink: imgLinks[index].getAttribute('src'),
+          groupName: name.textContent.trim().replace(/\s+/g, ' '),
+          imgLink:
+            imgLinks[index]?.children[0].getAttribute('src') || undefined,
           linkedinLink: name.getAttribute('href'),
         };
         groupArray.push(group);

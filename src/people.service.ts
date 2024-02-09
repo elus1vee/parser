@@ -12,47 +12,33 @@ export class PeopleService {
     const searchUrl = `https://www.linkedin.com/search/results/people/?keywords=${formattedKeywords}`;
 
     await this.page.goto(searchUrl);
-    await this.page.waitForNavigation();
+    // await this.page.waitForNavigation();
 
-    await this.page.waitForSelector('.entity-result__title-text');
-    // const results = await this.page.$$eval('.entity-result__title-text>a');
-    // console.log(results);
-    const bodyHandle = await this.page.$('body');
-    const results = await this.page.mainFrame().evaluate(() => {
+    const results = await this.page.evaluate(() => {
       const usersArray = [];
-      document
-        .querySelectorAll('.entity-result__title-text>a')
-        .forEach((username, index) => {
-          const user = {
-            username: username.children[0].children[0].textContent,
-            // imgLink: imgLinks[index].getAttribute('src'),
-            // linkedinLink: linkedinLinks[index].getAttribute(
-            // 'data-chameleon-result-urn',
-            // ),
-          };
-          usersArray.push(user);
-        });
+      const usersNames = document.querySelectorAll(
+        '.entity-result__title-text>a>span>span:first-child',
+      );
+
+      const imgLinks = document.querySelectorAll(
+        '.entity-result__universal-image > div > a > div > div > div',
+      );
+      const linkedinLinks = document.querySelectorAll(
+        '.entity-result__title-text>a',
+      );
+      console.log(imgLinks);
+      console.log(linkedinLinks);
+
+      usersNames.forEach((username, index) => {
+        const user = {
+          username: username.textContent,
+          imgLink: imgLinks[index]?.children[0].getAttribute('src') || undefined,
+          linkedinLink: linkedinLinks[index].getAttribute('href'),
+        };
+        usersArray.push(user);
+      });
       return usersArray;
-
-      //   // const imgLinks = document.querySelectorAll(
-      //   //   '.entity-result__universal-image > div > a > div > div > div > img',
-      //   // );
-      //   // const linkedinLinks = document.querySelectorAll(
-      //   //   '.reusable-search__result-container > div',
-      //   // );
-
-      //   // usernames.forEach((username, index) => {
-      //   //   const user = {
-      //   //     username: username.children[0].children[0].textContent,
-      //   //     // imgLink: imgLinks[index].getAttribute('src'),
-      //   //     // linkedinLink: linkedinLinks[index].getAttribute(
-      //   //     // 'data-chameleon-result-urn',
-      //   //     // ),
-      //   //   };
-      //   //   usersArray.push(user);
-      //   // });
-      //   // return usersArray;
-    }, bodyHandle);
+    });
     return results;
   }
   async login(username: string, password: string): Promise<any> {

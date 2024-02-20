@@ -3,8 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SearchController } from './search.controller';
 import { SearchSevice } from './search.service';
-import { SearchControllerI } from './i-people.controller';
-import { SearchSeviceI } from './i-people.service';
+import { SearchControllerI } from './i-search.controller';
+import { SearchSeviceI } from './i-search.service';
 
 @Module({
   imports: [],

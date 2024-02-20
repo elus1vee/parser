@@ -23,4 +23,14 @@ export class SearchController {
     }
     return { success: true, message: 'Successful authentication' };
   }
+  @Post('/msg')
+  async message(@Body() credentials: any): Promise<any> {
+    const { username, message } = credentials;
+    try {
+      await this.peopleService.message(username, message);
+    } catch (error) {
+      throw new Error('Message Error: ' + error.message);
+    }
+    return { success: true, message: 'Successful' };
+  }
 }

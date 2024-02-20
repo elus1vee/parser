@@ -4,6 +4,8 @@ import puppeteer, { Page } from 'puppeteer';
 @Injectable()
 export class SearchSevice {
   private page: Page;
+  private browser: any;
+
   async findPeople(username: string) {
     const usernameArray = username.split('-');
     const formattedKeywords =
@@ -16,6 +18,9 @@ export class SearchSevice {
       '.entity-result__title-text>a>span>span:first-child',
       { timeout: 5000 },
     );
+    // await this.page.waitForNavigation({
+    //   waitUntil: 'domcontentloaded',
+    // });
 
     const results = await this.page.evaluate(() => {
       const usersArray = [];
@@ -31,7 +36,7 @@ export class SearchSevice {
 
       usersNames.forEach((username, index) => {
         const user = {
-          username: username.textContent,
+          name: username.textContent,
           imgLink:
             imgLinks[index]?.children[0].getAttribute('src') || undefined,
           linkedinLink: linkedinLinks[index].getAttribute('href'),
@@ -43,10 +48,10 @@ export class SearchSevice {
     return results;
   }
   async login(username: string, password: string): Promise<any> {
-    const browser = await puppeteer.launch({
+    this.browser = await puppeteer.launch({
       headless: false,
     });
-    this.page = await browser.newPage();
+    this.page = await this.browser.newPage();
     await this.page.goto(
       `https://www.linkedin.com/login?fromSignIn=true&trk=guest_homepage-basic_nav-header-signin`,
     );
@@ -77,7 +82,7 @@ export class SearchSevice {
 
       groupNames.forEach((name, index) => {
         const group = {
-          groupName: name.textContent.trim().replace(/\s+/g, ' '),
+          name: name.textContent.trim().replace(/\s+/g, ' '),
           imgLink:
             imgLinks[index]?.children[0].getAttribute('src') || undefined,
           linkedinLink: name.getAttribute('href'),
@@ -87,5 +92,47 @@ export class SearchSevice {
       return groupArray;
     });
     return results;
+  }
+  async message(targetUsername: string, message: string) {
+    await this.page.goto('https://www.linkedin.com/messaging');
+    await this.page.waitForSelector(
+      '.msg-conversation-listitem__participant-names',
+      {
+        timeout: 5000,
+      },
+    );
+
+    const userElements = await this.page.$$(
+      '.msg-conversation-listitem__participant-names',
+    );
+    const linkElements = await this.page.$$('.msg-conversation-listitem__link');
+
+    for (let i = 0; i < userElements.length; i++) {
+      const userElement = userElements[i];
+      const linkElement = linkElements[i];
+
+      const username = await this.page.evaluate(
+        (user) => user.textContent.trim().replace(/\s+/g, ' '),
+        userElement,
+      );
+
+      if (username === targetUsername) {
+        const link = await this.page.evaluate(
+          (links) => links.getAttribute('href'),
+          linkElement,
+        );
+        await this.page.goto(`https://www.linkedin.com/${link}`);
+        await this.page.waitForSelector('.msg-form__contenteditable');
+        await this.page.type('.msg-form__contenteditable', message);
+        await this.page.waitForFunction(() => {
+          const button = document.querySelector(
+            '.msg-form__send-button',
+          ) as HTMLButtonElement;
+          return !button.disabled;
+        });
+        await this.page.click('.msg-form__send-button');
+        break;
+      }
+    }
   }
 }

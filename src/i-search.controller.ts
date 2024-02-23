@@ -20,4 +20,14 @@ export class SearchControllerI {
   async findByName(@Param() params: any): Promise<any> {
     return this.peopleService.findByFilter(params.filter);
   }
+  @Post('/message')
+  async message(@Body() credentials: any): Promise<any> {
+    const { account, message } = credentials;
+    try {
+      await this.peopleService.sendMessage(account, message);
+    } catch (error) {
+      throw new Error('Message Error: ' + error.message);
+    }
+    return { success: true, message: 'Successful' };
+  }
 }

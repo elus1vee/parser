@@ -8,6 +8,39 @@ export class SearchSeviceI {
 
   constructor() {}
 
+  async sendMessage(account: string, message: string) {
+    let allMessagesSent = true;
+
+    try {
+      await this.page.goto(`https://www.instagram.com/${account}/`);
+      await this.page.waitForSelector(
+        '.x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.x1i64zmx.x1n2onr6.x6ikm8r.x10wlt62.x1iyjqo2.x2lwn1j.xeuugli.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1',
+      );
+      await this.page.click(
+        '.x9f619.xjbqb8w.x78zum5.x168nmei.x13lgxp2.x5pf9jr.xo71vjh.x1i64zmx.x1n2onr6.x6ikm8r.x10wlt62.x1iyjqo2.x2lwn1j.xeuugli.xdt5ytf.xqjyukv.x1qjc9v5.x1oa3qoh.x1nhvcw1',
+      );
+
+      const searchResultSelector = '._a9--._ap36._a9_1';
+      await this.page.waitForSelector(searchResultSelector);
+      const searchResultElement = await this.page.$(searchResultSelector);
+      if (searchResultElement !== null) {
+        await this.page.click(searchResultSelector);
+      }
+
+      await this.page.waitForSelector('[aria-label="Message"]');
+
+      const message_input = await this.page.$('[aria-label="Message"]');
+      await message_input.type(message);
+
+      await this.page.keyboard.press('Enter');
+    } catch (error) {
+      console.error(`Error sending message to account ${account}: ${error}`);
+      allMessagesSent = false;
+    }
+
+    return allMessagesSent ? 'Message sent' : 'Error sending message';
+  }
+
   async findByFilter(filter: string) {
     const searchUrl = 'https://www.instagram.com/';
     await this.page.goto(searchUrl);
